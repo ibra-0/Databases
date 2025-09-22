@@ -1,0 +1,262 @@
+create table employee
+(
+    empid      integer not null
+        primary key,
+    ssn        varchar(11)
+        unique,
+    email      varchar(255)
+        unique,
+    phone      varchar(12)
+        unique,
+    name       varchar(100),
+    department varchar(50),
+    salary     numeric(10, 2)
+);
+
+alter table employee
+    owner to postgres;
+
+create table registration
+(
+    studentid  integer     not null,
+    coursecode varchar(10) not null,
+    section    varchar(10) not null,
+    semester   varchar(10) not null,
+    year       integer     not null,
+    grade      varchar(2),
+    credits    integer,
+    primary key (studentid, coursecode, section, semester, year)
+);
+
+alter table registration
+    owner to postgres;
+
+create table professor
+(
+    profid     integer not null
+        primary key,
+    name       varchar(100),
+    department varchar(50),
+    salary     numeric(10, 2)
+);
+
+alter table professor
+    owner to postgres;
+
+create table department
+(
+    deptcode varchar(10) not null
+        primary key,
+    deptname varchar(100),
+    budget   numeric(12, 2),
+    chairid  integer
+        constraint fk_chair
+            references professor
+);
+
+alter table department
+    owner to postgres;
+
+create table student
+(
+    studentid integer not null
+        primary key,
+    name      varchar(100),
+    email     varchar(100)
+        unique,
+    major     varchar(10)
+        constraint fk_major
+            references department,
+    advisorid integer
+        constraint fk_advisor
+            references professor
+);
+
+alter table student
+    owner to postgres;
+
+create table course
+(
+    courseid       varchar(10) not null
+        primary key,
+    title          varchar(100),
+    credits        integer,
+    departmentcode varchar(10)
+        constraint fk_course_dept
+            references department
+);
+
+alter table course
+    owner to postgres;
+
+create table enrollment
+(
+    studentid integer     not null
+        constraint fk_enrollment_student
+            references student,
+    courseid  varchar(10) not null
+        constraint fk_enrollment_course
+            references course,
+    semester  varchar(20) not null,
+    grade     varchar(2),
+    primary key (studentid, courseid, semester)
+);
+
+alter table enrollment
+    owner to postgres;
+
+create table customer
+(
+    customerid serial
+        primary key,
+    name       varchar(100) not null,
+    email      varchar(100) not null
+        unique,
+    phone      varchar(20)
+);
+
+alter table customer
+    owner to postgres;
+
+create table address
+(
+    addressid  serial
+        primary key,
+    customerid integer
+        references customer
+            on delete cascade,
+    street     varchar(150),
+    city       varchar(50),
+    state      varchar(50),
+    zip        varchar(20),
+    country    varchar(50)
+);
+
+alter table address
+    owner to postgres;
+
+create table orders
+(
+    orderid           serial
+        primary key,
+    customerid        integer
+        references customer
+            on delete cascade,
+    orderdate         timestamp default now() not null,
+    status            varchar(20),
+    shippingaddressid integer
+        references address
+);
+
+alter table orders
+    owner to postgres;
+
+create table category
+(
+    categoryid  serial
+        primary key,
+    name        varchar(100) not null
+        unique,
+    description text
+);
+
+alter table category
+    owner to postgres;
+
+create table vendor
+(
+    vendorid    serial
+        primary key,
+    name        varchar(100) not null,
+    contactinfo text
+);
+
+alter table vendor
+    owner to postgres;
+
+create table product
+(
+    productid   serial
+        primary key,
+    name        varchar(100)   not null,
+    description text,
+    price       numeric(10, 2) not null,
+    categoryid  integer
+        references category,
+    vendorid    integer
+        references vendor
+);
+
+alter table product
+    owner to postgres;
+
+create table orderitem
+(
+    orderid          integer        not null
+        references orders
+            on delete cascade,
+    productid        integer        not null
+        constraint fk_orderitem_product
+            references product
+            on delete cascade,
+    quantity         integer        not null,
+    priceatordertime numeric(10, 2) not null,
+    primary key (orderid, productid)
+);
+
+alter table orderitem
+    owner to postgres;
+
+create table inventory
+(
+    productid  integer not null
+        primary key
+        references product
+            on delete cascade,
+    stocklevel integer not null
+);
+
+alter table inventory
+    owner to postgres;
+
+create table review
+(
+    reviewid   serial
+        primary key,
+    customerid integer
+        references customer
+            on delete cascade,
+    productid  integer
+        references product
+            on delete cascade,
+    rating     integer
+        constraint review_rating_check
+            check ((rating >= 1) AND (rating <= 5)),
+    comment    text,
+    reviewdate timestamp default now()
+);
+
+alter table review
+    owner to postgres;
+
+create table instructor
+(
+    instructorid   integer      not null
+        primary key,
+    instructorname varchar(100) not null
+);
+
+alter table instructor
+    owner to postgres;
+
+create table room
+(
+    room     varchar(20)  not null
+        primary key,
+    building varchar(100) not null
+);
+
+alter table room
+    owner to postgres;
+
+
